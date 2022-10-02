@@ -52,7 +52,6 @@ public:
     }
 
     void *allocate() {
-
         if (m_free_blocks.size() > 0) {
             auto *block = m_free_blocks.last();
             --m_free_cells;
@@ -98,14 +97,7 @@ public:
     }
 
 private:
-    HeapBlock *add_heap_block() {
-        auto *block = reinterpret_cast<HeapBlock *>(aligned_alloc(HEAP_BLOCK_SIZE, HEAP_BLOCK_SIZE));
-        new (block) HeapBlock(m_cell_size);
-        m_blocks.set(block);
-        add_free_block(block);
-        m_free_cells += cell_count_per_block();
-        return block;
-    }
+    HeapBlock *add_heap_block();
 
     size_t m_cell_size;
     size_t m_free_cells { 0 };

@@ -80,17 +80,20 @@ void HashObject::put(Env *env, Value key, Value val) {
 
     auto hash = generate_key_hash(env, key);
     key_container.hash = hash;
-    auto entry = m_hashmap.find_item(&key_container, hash, env);
-    if (entry) {
-        ((Key *)entry->key)->val = val;
-        entry->value = val;
-    } else {
-        if (m_is_iterating) {
-            env->raise("RuntimeError", "can't add a new key into hash during iteration");
+
+    Heap::the().with_lock([&]() {
+        auto entry = m_hashmap.find_item(&key_container, hash, env);
+        if (entry) {
+            ((Key *)entry->key)->val = val;
+            entry->value = val;
+        } else {
+            if (m_is_iterating) {
+                env->raise("RuntimeError", "can't add a new key into hash during iteration");
+            }
+            auto *key_container = key_list_append(env, key, hash, val);
+            m_hashmap.put(key_container, val, env);
         }
-        auto *key_container = key_list_append(env, key, hash, val);
-        m_hashmap.put(key_container, val, env);
-    }
+    });
 }
 
 Value HashObject::remove(Env *env, Value key) {

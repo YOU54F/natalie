@@ -4,6 +4,12 @@
         abort();                                                              \
     }
 
+#define NAT_FATAL(msg)                                                   \
+    {                                                                    \
+        fprintf(stderr, "fatal: %s (%s#%d)\n", msg, __FILE__, __LINE__); \
+        abort();                                                         \
+    }
+
 #define NAT_NOT_YET_IMPLEMENTED(msg, ...)                                                         \
     {                                                                                             \
         fprintf(stderr, "NOT YET IMPLEMENTED in %s#%d: " msg, __FILE__, __LINE__, ##__VA_ARGS__); \

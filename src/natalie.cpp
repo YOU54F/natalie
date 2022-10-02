@@ -110,6 +110,10 @@ Env *build_top_env() {
     Object->const_set("String"_s, String);
     String->include_once(env, Comparable);
 
+    ClassObject *Thread = Object->subclass(env, "Thread", Object::Type::Thread);
+    global_env->set_Thread(Thread);
+    Object->const_set("Thread"_s, Thread);
+
     ClassObject *Array = Object->subclass(env, "Array", Object::Type::Array);
     global_env->set_Array(Array);
     Object->const_set("Array"_s, Array);

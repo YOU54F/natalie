@@ -955,6 +955,13 @@ gen.binding('Symbol', 'to_s', 'SymbolObject', 'to_s', argc: 0, pass_env: true, p
 gen.binding('Symbol', 'to_sym', 'SymbolObject', 'to_sym', argc: 0, pass_env: true, pass_block: false, return_type: :Object)
 gen.binding('Symbol', 'upcase', 'SymbolObject', 'upcase', argc: 0, pass_env: true, pass_block: false, return_type: :Object)
 
+gen.static_binding('Thread', 'current', 'ThreadObject', 'current', argc: 0, pass_env: false, pass_block: false, return_type: :Object)
+gen.static_binding('Thread', 'main', 'ThreadObject', 'main', argc: 0, pass_env: false, pass_block: false, return_type: :Object)
+gen.binding('Thread', 'initialize', 'ThreadObject', 'initialize', argc: 0, pass_env: true, pass_block: true, return_type: :Object)
+gen.binding('Thread', 'join', 'ThreadObject', 'join', argc: 0, pass_env: false, pass_block: false, return_type: :Object)
+gen.binding('Thread', 'inspect', 'ThreadObject', 'inspect', argc: 0, pass_env: true, pass_block: false, return_type: :Object)
+gen.binding('Thread', 'value', 'ThreadObject', 'value', argc: 0, pass_env: false, pass_block: false, return_type: :Object)
+
 gen.static_binding('Time', 'at', 'TimeObject', 'at', argc: 1..2, pass_env: true, pass_block: false, return_type: :Object)
 gen.static_binding('Time', 'local', 'TimeObject', 'local', argc: 1..7, pass_env: true, pass_block: false, return_type: :Object)
 gen.static_binding('Time', 'new', 'TimeObject', 'create', argc: 0, pass_env: true, pass_block: false, return_type: :Object)

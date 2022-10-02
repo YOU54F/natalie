@@ -67,6 +67,9 @@ public:
     ClassObject *Symbol() { return m_Symbol; }
     void set_Symbol(ClassObject *Symbol) { m_Symbol = Symbol; }
 
+    ClassObject *Thread() { return m_Thread; }
+    void set_Thread(ClassObject *Thread) { m_Thread = Thread; }
+
     ClassObject *Time() { return m_Time; }
     void set_Time(ClassObject *Time) { m_Time = Time; }
 
@@ -89,6 +92,8 @@ public:
     bool rescued() const { return m_rescued; }
     void set_rescued(bool rescued) { m_rescued = rescued; }
 
+    TM::Hashmap<ThreadObject *> &threads() { return m_threads; }
+
     friend class SymbolObject;
 
     virtual void visit_children(Visitor &visitor) override final;
@@ -104,6 +109,8 @@ private:
 
     TM::Hashmap<SymbolObject *, Value> m_globals {};
 
+    TM::Hashmap<ThreadObject *> m_threads {};
+
     ClassObject *m_Array { nullptr };
     ClassObject *m_Binding { nullptr };
     ClassObject *m_Class { nullptr };
@@ -117,6 +124,7 @@ private:
     ClassObject *m_Rational { nullptr };
     ClassObject *m_Regexp { nullptr };
     ClassObject *m_String { nullptr };
+    ClassObject *m_Thread { nullptr };
     ClassObject *m_Symbol { nullptr };
     ClassObject *m_Time { nullptr };
     Natalie::Object *m_main_obj { nullptr };

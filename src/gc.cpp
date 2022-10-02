@@ -27,6 +27,7 @@ void MarkingVisitor::visit(Value val) {
 TM::Hashmap<Cell *> Heap::gather_conservative_roots() {
     void *dummy;
     void *end_of_stack = &dummy;
+    void *real_end_of_stack = &dummy;
 
     // step over stack, saving potential pointers
     assert(m_start_of_stack);
@@ -35,25 +36,44 @@ TM::Hashmap<Cell *> Heap::gather_conservative_roots() {
 
     Hashmap<Cell *> roots;
 
+    /*
     for (char *ptr = reinterpret_cast<char *>(end_of_stack); ptr < m_start_of_stack; ptr += sizeof(intptr_t)) {
         Cell *potential_cell = *reinterpret_cast<Cell **>(ptr); // NOLINT
         if (roots.get(potential_cell))
             continue;
-        if (is_a_heap_cell_in_use(potential_cell)) {
+        if (is_a_heap_cell_in_use(potential_cell))
             roots.set(potential_cell);
+    }
+    */
+
+    // FIXME: the below section *should* be able to find all the roots of the main thread's stack,
+    // but it doesn't for some reason. Uncommenting the code above fixes the issue, but of course, that
+    // only works if GC only runs on the main thread. :-(
+
+    // step over stack of all threads
+    for (auto pair : GlobalEnv::the()->threads()) {
+        auto thread = pair.first;
+        auto start_of_stack = (char *)thread->start_of_stack();
+        auto end_of_stack = start_of_stack - thread->stack_size();
+        for (char *ptr = (char *)(end_of_stack); ptr < (char *)start_of_stack; ptr += sizeof(intptr_t)) {
+            Cell *potential_cell = *reinterpret_cast<Cell **>(ptr); // NOLINT
+            if (roots.get(potential_cell))
+                continue;
+            if (is_a_heap_cell_in_use(potential_cell))
+                roots.set(potential_cell);
         }
     }
 
     // step over any registers, saving potential pointers
+    // FIXME: how do we examine registers of other threads??
     jmp_buf jump_buf;
     setjmp(jump_buf);
     for (char *i = (char *)jump_buf; i < (char *)jump_buf + sizeof(jump_buf); ++i) {
         Cell *potential_cell = *reinterpret_cast<Cell **>(i);
         if (roots.get(potential_cell))
             continue;
-        if (is_a_heap_cell_in_use(potential_cell)) {
+        if (is_a_heap_cell_in_use(potential_cell))
             roots.set(potential_cell);
-        }
     }
 
     return roots;
@@ -132,6 +152,11 @@ void Heap::sweep() {
 }
 
 void *Heap::allocate(size_t size) {
+    if (pthread_mutex_lock(&m_allocation_mutex) != 0) {
+        printf("Fatal: unable to acquire lock for GC\n");
+        abort();
+    }
+
     static auto is_profiled = NativeProfiler::the()->enabled();
     NativeProfilerEvent *profiler_event;
     if (is_profiled)
@@ -156,7 +181,14 @@ void *Heap::allocate(size_t size) {
 #endif
     }
 
-    return allocator.allocate();
+    auto result = allocator.allocate();
+
+    if (pthread_mutex_unlock(&m_allocation_mutex) != 0) {
+        printf("Fatal: unable to release lock for GC\n");
+        abort();
+    }
+
+    return result;
 }
 
 void Heap::return_cell_to_free_list(Cell *cell) {
@@ -188,6 +220,15 @@ void Heap::dump() const {
         }
     }
     printf("Total allocations: %lld\n", allocation_count);
+}
+
+HeapBlock *Allocator::add_heap_block() {
+    auto block = reinterpret_cast<HeapBlock *>(aligned_alloc(HEAP_BLOCK_SIZE, HEAP_BLOCK_SIZE));
+    new (block) HeapBlock(m_cell_size);
+    m_blocks.set(block);
+    add_free_block(block);
+    m_free_cells += cell_count_per_block();
+    return block;
 }
 
 Cell *HeapBlock::find_next_free_cell() {

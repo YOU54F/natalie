@@ -43,6 +43,7 @@ class RegexpObject;
 class SexpObject;
 class StringObject;
 class SymbolObject;
+class ThreadObject;
 class TimeObject;
 class TrueObject;
 class Object;

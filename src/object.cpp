@@ -92,6 +92,10 @@ Value Object::create(Env *env, ClassObject *klass) {
         obj = new StringObject { klass };
         break;
 
+    case Object::Type::Thread:
+        obj = new ThreadObject { klass };
+        break;
+
     case Object::Type::Time:
         obj = new TimeObject { klass };
         break;
@@ -278,6 +282,11 @@ const StringObject *Object::as_string() const {
 SymbolObject *Object::as_symbol() {
     assert(is_symbol());
     return static_cast<SymbolObject *>(this);
+}
+
+ThreadObject *Object::as_thread() {
+    assert(is_thread());
+    return static_cast<ThreadObject *>(this);
 }
 
 TimeObject *Object::as_time() {

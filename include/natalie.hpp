@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <float.h>
 #include <inttypes.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -58,6 +59,7 @@
 #include "natalie/string_object.hpp"
 #include "natalie/string_upto_iterator.hpp"
 #include "natalie/symbol_object.hpp"
+#include "natalie/thread_object.hpp"
 #include "natalie/time_object.hpp"
 #include "natalie/true_object.hpp"
 #include "natalie/types.hpp"

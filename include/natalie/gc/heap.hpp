@@ -34,6 +34,8 @@ public:
         for (auto *allocator : m_allocators)
             delete allocator;
         m_allocators.clear();
+        pthread_mutex_destroy(&m_allocation_mutex);
+        pthread_mutex_destroy(&m_mutex);
     }
 
     void *allocate(size_t size);
@@ -86,6 +88,21 @@ public:
     bool collect_all_at_exit() const { return m_collect_all_at_exit; }
     void set_collect_all_at_exit(bool collect) { m_collect_all_at_exit = collect; }
 
+    template <typename F>
+    void with_lock(F lambda) {
+        if (pthread_mutex_lock(&m_mutex) != 0) {
+            printf("Fatal: unable to acquire thread lock for GC\n");
+            abort();
+        }
+
+        lambda();
+
+        if (pthread_mutex_unlock(&m_mutex) != 0) {
+            printf("Fatal: unable to release thread lock for GC\n");
+            abort();
+        }
+    }
+
 private:
     inline static Heap *s_instance = nullptr;
 
@@ -97,6 +114,8 @@ private:
         m_allocators.push(new Allocator(256));
         m_allocators.push(new Allocator(512));
         m_allocators.push(new Allocator(1024));
+        pthread_mutex_init(&m_allocation_mutex, nullptr);
+        pthread_mutex_init(&m_mutex, nullptr);
     }
 
     TM::Hashmap<Cell *> gather_conservative_roots();
@@ -125,6 +144,8 @@ private:
     void *m_start_of_stack { nullptr };
     bool m_gc_enabled { false };
     bool m_collect_all_at_exit { false };
+    pthread_mutex_t m_allocation_mutex;
+    pthread_mutex_t m_mutex;
 };
 
 }

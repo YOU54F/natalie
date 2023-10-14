@@ -106,7 +106,7 @@ Value FFI_Library_attach_function(Env *env, Value self, Args args, Block *) {
     auto ffi_args_obj = new VoidPObject {
         ffi_args,
         [](auto p) {
-            delete[] (ffi_type **)p->void_ptr();
+            delete[](ffi_type **) p->void_ptr();
         }
     };
 

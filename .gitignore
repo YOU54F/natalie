@@ -19,3 +19,6 @@ tags
 
 # Natalie tools
 profile-*.json
+
+# CI builds
+/tmp
